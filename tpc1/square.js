@@ -111,7 +111,7 @@ function setupCallBacks() {
         console.log("Delta " + e.wheelDelta);
         var res;
         zoom += e.wheelDelta;
-        scale = Math.max((512 - zoom)/canvas.width, 0.1);
+        scale = Math.max((canvas.width - zoom)/canvas.width, 0.1);//funciona assumindo que o canvas e quadrado
         scale = Math.min(scale, 200.0);
         if(scale == 200.0 || scale == 0.1) {
             zoom -= e.wheelDelta;
