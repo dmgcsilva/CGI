@@ -59,18 +59,26 @@ vec2 applyFunc(vec2 z) {
         w = multiply(z,z);
     }
     if(func == 3){
+        //exp(100/z)
+        
         w.x = exponencial(division(vec2(100.0,0),z)).x;
         w.y = exponencial(division(vec2(100.0,0),z)).y;
     }
     
     if(func == 4){
+        //(z^2 + 1) / (z^2 - 1)
+        
         float re = multiply(z,z).x;
         float im = multiply(z,z).y;
         w = division(vec2(re+1.0, im), vec2(re-1.0, im));
     }
     if (func == 5) {
-        vec2 g = addition(exponencial(z), division(multiply(multiply(multiply(addition(z,vec2(-2.0,0.0)), addition(z,vec2(-2.0,0.0))), addition(z,vec2(1.0,-2.0))), addition(z, vec2(2.0,2.0))),multiply(multiply(z,z),z)));
-        w = multiply(multiply(g,g),g);
+        //f3^3(z) com f3(z)=exp(z) + [ (z - 2)^2 (z + 1 - 2i) (z + 2 + 2i) ] / (z^3)
+        
+        vec2 a = addition(z,vec2(-2.0,0.0));
+        vec2 b = addition(z,vec2(1.0,-2.0));
+        vec2 c = addition(z,vec2(2.0,2.0));
+        w = addition(exponencial(z),division(multiply(multiply(multiply(a,a),b),c),multiply(multiply(z,z),z)));
     }
     if (func == 6) {
         //[(z+2)^2](z-1-2i)(z+i)
