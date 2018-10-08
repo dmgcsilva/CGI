@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+varying vec4 fPosition;
+void main(){
+    gl_Position = vPosition;
+    fPosition = vPosition;
+}
+</script>
+<!--converter em polares só depois de aplicar função
+z = vec2()
+w=2z;
+w' = csh(w)
+h = theta
+v = fract(log2())
+s = 1
+-->
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 fPosition;
+uniform vec3 drag;
+uniform int func;
+uniform int n;
+uniform float scale;
+
+vec2 addition(vec2 a, vec2 b) {
+    float re = a.x + b.x;
+    float im = a.y + b.y;
+    return vec2(re,im);
+}
+
+vec2 multiply(vec2 a, vec2 b) {
+    float re = a.x * b.x - a.y * b.y;
+    float im = a.x * b.y + a.y * b.x;
+    return vec2(re,im);
+}
+
+vec2 division(vec2 a, vec2 b) {
+    float re = (a.x*b.x+a.y*b.y)/(b.x*b.x+b.y*b.y);
+    float im = (a.y*b.x-a.x*b.y)/(b.x*b.x+b.y*b.y);
+    return vec2(re,im);
+}
+
+vec2 exponencial(vec2 a) {
+    float re = exp(a.x) * cos(a.y);
+    float im = exp(a.x) * sin(a.y);
+    return vec2(re,im);
+}
+
+vec2 applyFunc(vec2 z) {
+    vec2 w;
+    
+    if(func == 1) {
+        w = z;
+    }
+    if(func == 2){
+        w = multiply(z,z);
+    }
+    if(func == 3){
+        w.x = exponencial(division(vec2(100.0,0),z)).x;
+        w.y = exponencial(division(vec2(100.0,0),z)).y;
+    }
+    
+    if(func == 4){
+        float re = multiply(z,z).x;
+        float im = multiply(z,z).y;
+        w = division(vec2(re+1.0, im), vec2(re-1.0, im));
+    }
+    if (func == 5) {
+        vec2 g = addition(exponencial(z), division(multiply(multiply(multiply(addition(z,vec2(-2.0,0.0)), addition(z,vec2(-2.0,0.0))), addition(z,vec2(1.0,-2.0))), addition(z, vec2(2.0,2.0))),multiply(multiply(z,z),z)));
+        w = multiply(multiply(g,g),g);
+    }
+    if (func == 6) {
+        //[(z+2)^2](z-1-2i)(z+i)
+        w = addition(z,vec2(2.0,0.0));
+        w = multiply(multiply(multiply(w,w),addition(z,vec2(-1.0,-2.0))),addition(z,vec2(0.0,1.0)));
+    }
+        
+    return w;
+}
+
+
+
+vec4 HSVtoRGB(float h, float s, float v)
+{
+    //Convert between the HSV and RGB color model.
+    //Taken from http://www.cs.rit.edu/~ncs/color/t_convert.html and rewritten for GLSL 
+    int i;
+    float f, p, q, t;
+    vec4 RGB;
+
+    if (s == 0.0)
+    {
+    // achromatic (grey)
+    RGB.x = RGB.y = RGB.z = v;
+    RGB.w = 1.0;
+    return RGB;
+    }
+    
+    h /= 60.0; // sector 0 to 5
+    i = int(floor(h));
+    f = h - float(i); // fracional part of h
+    p = v * (1.0 - s);
+    q = v * (1.0 - s * f);
+    t = v * (1.0 - s * (1.0 - f));
+    
+    if(i==0)
+    {
+        RGB.x = v;
+        RGB.y = t;
+        RGB.z = p;
+    }
+    else if(i==1)
+    {
+        RGB.x = q;
+        RGB.y = v;
+        RGB.z = p;
+    }
+    else if(i==2)
+    {
+        RGB.x = p;
+        RGB.y = v;
+        RGB.z = t;
+    }
+    else if(i==3)
+    {
+        RGB.x = p;
+        RGB.y = q;  
+        RGB.z = v;
+    }
+    else if(i==4)
+    {
+        RGB.x = t;
+        RGB.y = p;
+        RGB.z = v;
+    }
+    else if(i==5)
+    {
+        RGB.x = v;
+        RGB.y = p;
+        RGB.z = q;
+    }
+    else
+    {
+        RGB.x = 1.0;
+        RGB.y = 1.0;
+        RGB.z = 1.0;
+    }
+    RGB.w = 1.0;
+    return RGB;
+}
+
+vec2 cartToPolar(vec2 cart) {
+    float theta = atan(cart.y, cart.x);
+    theta = theta* 180.0 / 3.14159265358979;
+    if (theta < 0.0) {
+        theta += 360.0;
+    }
+      
+    
+    float r = sqrt((cart.x * cart.x) + (cart.y * cart.y));
+    return vec2(r, theta);
+}
+
+vec2 iterate(vec2 z) {
+    int n2 = int(n);
+    vec2 w = z;
+    for(int i = 0; i < 20; i += 1) {
+        if(n2 > 0) {
+            w = applyFunc(w);
+            n2 -= 1;
+        }
+    }
+    return w;
+}
+vec4 positionToColor2(vec2 w) {
+    vec3 color;
+    vec2 conv;
+    
+    w = iterate(w);
+    
+    conv = cartToPolar(w);
+    
+    color.x = conv.y;
+    color.y = 1.0;
+    color.z = fract(log2(conv.x));
+    
+    return HSVtoRGB(conv.y, 1.0, color.z);
+}
+
+void main() {
+    vec4 finalPosition = fPosition;
+    finalPosition.x += drag.x;
+    finalPosition.y += drag.y;
+    gl_FragColor = positionToColor2(vec2(finalPosition.x*scale,finalPosition.y*scale));
+}
+</script>
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="square.js"></script>
+</head>
+<body>
+    <title>Square</title>
+    <canvas id="gl-canvas" width="512" height="512">
+        Oops... your browser doesn't support the HTML5 canvas element"
+    </canvas>
+</body>
+</html>
