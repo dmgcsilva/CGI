@@ -55,12 +55,12 @@ window.onload = function init() {
 function createDropDown() {
     dropDown = document.createElement("select");
     dropDown.id = "dropDownID";
-    dropDown.options.add( new Option("w = z",1));
-    dropDown.options.add( new Option("w = z^2",2));
-    dropDown.options.add( new Option("w = exp(100/z)",3));
-    dropDown.options.add( new Option("w = (z^2 + 1) / (z^2 - 1)",4));
-    dropDown.options.add( new Option("func5",5));
-    dropDown.options.add( new Option("func6",6));
+    dropDown.options.add( new Option("Função nº1",1));
+    dropDown.options.add( new Option("Função nº2",2));
+    dropDown.options.add( new Option("Função nº3",3));
+    dropDown.options.add( new Option("Função nº4",4));
+    dropDown.options.add( new Option("Função nº5",5));
+    dropDown.options.add( new Option("Função nº6",6));
     document.body.appendChild(dropDown);
 }
 function createSlide() {
