@@ -1,6 +1,7 @@
 var gl, dragLoc, slideLoc, dropDownLoc, scaleLoc;
-var canvas, lastX, lastY, dragging, slide, dropDown;
-var drag = vec3(0.0,0.0,0.0), scale = 1, zoom = 0;
+var canvas, lastX, lastY, dragging, slide, dropDown, aniButton, resetButton;
+var drag = vec3(0.0,0.0,0.0), scale = 1;
+var dtx = Math.PI/2.0, dty = 0.0, dtInc = 0.0, dt_loc;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -37,6 +38,7 @@ window.onload = function init() {
     gl.uniform3fv(dragLoc, drag);
     scaleLoc = gl.getUniformLocation(program, "scale");
     gl.uniform1f(scaleLoc, scale);
+    dt_loc = gl.getUniformLocation(program, "dt");
 
     document.body.appendChild(document.createElement("p"));
     createSlide();
@@ -49,6 +51,8 @@ window.onload = function init() {
     dropDownLoc = gl.getUniformLocation(program, "func");
     gl.uniform1i(dropDownLoc, dropDown.value);
 
+    createAnimationButton();
+    createResetButton();
     setupCallBacks();
     render();
 }
@@ -74,6 +78,27 @@ function createSlide() {
     document.body.appendChild(slide);
 }
 
+function createAnimationButton() {
+  aniButton = document.createElement("INPUT");
+  aniButton.setAttribute("type", "button");
+  aniButton.id = "aniButton";
+  aniButton.value = "Animation";
+  document.body.appendChild(aniButton);
+}
+
+function createResetButton() {
+  resetButton = document.createElement("INPUT");
+  resetButton.setAttribute("type", "button");
+  resetButton.id = "reset";
+  resetButton.value = "Reset Animation";
+  resetButton.onclick = function() {
+    dtx = Math.PI/2.0;
+    dty = 0.0;
+    dtInc = 0.0;
+  }
+  document.body.appendChild(resetButton);
+}
+
 function setupCallBacks() {
     canvas.addEventListener("mousedown", function(e) {
         console.log("mousedown");
@@ -94,8 +119,8 @@ function setupCallBacks() {
             var newX = e.clientX,
             newY = e.clientY;
 
-            var dx = -1*(newX - lastX),
-                dy = -1*-1*(newY - lastY);
+            var dx = -1*scale*(newX - lastX),
+                dy = scale*(newY - lastY);
             var model_dx = 2*(dx/canvas.width),
                 model_dy = 2*(dy/canvas.height);
 
@@ -104,7 +129,8 @@ function setupCallBacks() {
 
             lastX = newX;
             lastY = newY;
-            console.log(drag[0]);
+            console.log("drag X: " + drag[0]);
+            console.log("drag Y: " + drag[1]);
     }
 });
     window.addEventListener("keypress", function(e) {
@@ -117,19 +143,29 @@ function setupCallBacks() {
         case 'e':
           console.log("E");
           scale += 1/500 * scale*2.0;
-
           break;
         default:
           console.log("default");
           break;
       }
-    })
+    });
+
+    aniButton.onclick = function() {
+      if (dtInc == 0.0)
+        dtInc = 0.01;
+      else
+        dtInc = 0.0;
+    }
 }
 
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.uniform2f(dt_loc, dtx, dty);
+    dtx += dtInc;
+    dty += dtInc;
 
     gl.uniform3fv(dragLoc, drag);
     gl.uniform1i(slideLoc, slide.value);
