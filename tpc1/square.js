@@ -1,7 +1,8 @@
-var gl, dragLoc, slideLoc, dropDownLoc, scaleLoc;
-var canvas, lastX, lastY, dragging, slide, dropDown, aniButton, resetButton;
+var gl, dragLoc, slideLoc, dropDownLoc, scaleLoc, propLoc, time_loc;
+var canvas, lastX, lastY, dragging, slide, dropDown, aniButton, resetButton, reScaleButton;
 var drag = vec3(0.0,0.0,0.0), scale = 1;
-var dtx = Math.PI/2.0, dty = 0.0, dtInc = 0.0, dt_loc;
+var timex = Math.PI/2.0, timey = 0.0, timeInc = 0.0;
+var prop = vec2(1.0,1.0);
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -33,13 +34,14 @@ window.onload = function init() {
     var vPosition = gl.getAttribLocation(program, "vPosition");
     gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
-
+    //Load uniforms to the shadder
     dragLoc = gl.getUniformLocation(program, "drag");
     gl.uniform3fv(dragLoc, drag);
     scaleLoc = gl.getUniformLocation(program, "scale");
     gl.uniform1f(scaleLoc, scale);
-    dt_loc = gl.getUniformLocation(program, "dt");
+    time_loc = gl.getUniformLocation(program, "time");
 
+    // Create paragraph and slide to adjust the iterations desired
     document.body.appendChild(document.createElement("p"));
     createSlide();
 
@@ -51,20 +53,33 @@ window.onload = function init() {
     dropDownLoc = gl.getUniformLocation(program, "func");
     gl.uniform1i(dropDownLoc, dropDown.value);
 
+    propLoc = gl.getUniformLocation(program, "prop");
+    gl.uniform2fv(propLoc, prop);
+
+    //Create animation related buttons
     createAnimationButton();
     createResetButton();
+    //Create the zoom text and two paragraphs
+    document.body.appendChild(document.createElement("p"));
+    var text = document.createTextNode("Use Q to zoom in and E to zoom out. Have fun and check if your caps lock is off.");
+    document.body.appendChild(text);
+    document.body.appendChild(document.createElement("p"));
+
+    //create rescale and recenter button
+    createReScaleButton();
+    // setup callbacks
     setupCallBacks();
     render();
 }
 function createDropDown() {
     dropDown = document.createElement("select");
     dropDown.id = "dropDownID";
-    dropDown.options.add( new Option("Função nº1",1));
-    dropDown.options.add( new Option("Função nº2",2));
-    dropDown.options.add( new Option("Função nº3",3));
-    dropDown.options.add( new Option("Função nº4",4));
-    dropDown.options.add( new Option("Função nº5",5));
-    dropDown.options.add( new Option("Função nº6",6));
+    dropDown.options.add( new Option("Funcao n1",1));
+    dropDown.options.add( new Option("Funcao n2",2));
+    dropDown.options.add( new Option("Funcao n3",3));
+    dropDown.options.add( new Option("Funcao n4",4));
+    dropDown.options.add( new Option("Função n5",5));
+    dropDown.options.add( new Option("Função n6",6));
     document.body.appendChild(dropDown);
 }
 function createSlide() {
@@ -92,14 +107,43 @@ function createResetButton() {
   resetButton.id = "reset";
   resetButton.value = "Reset Animation";
   resetButton.onclick = function() {
-    dtx = Math.PI/2.0;
-    dty = 0.0;
-    dtInc = 0.0;
+    timex = Math.PI/2.0;
+    timey = 0.0;
+    timeInc = 0.0;
   }
   document.body.appendChild(resetButton);
 }
 
+function createReScaleButton() {
+  reScaleButton = document.createElement("INPUT");
+  reScaleButton.setAttribute("type", "button");
+  reScaleButton.id = "reScaleButton";
+  reScaleButton.value = "Rescale Canvas";
+  reScaleButton.onclick = function() {
+    scale = 1.0;
+    drag = vec3(0.0,0.0,0.0);
+  };
+  document.body.appendChild(reScaleButton);
+}
+
 function setupCallBacks() {
+    window.onresize = function() {
+        var height = window.innerHeight;
+        var width = window.innerWidth;
+        canvas.width = width;
+        canvas.height = height;
+        console.log("h: " + height + " w: " + width);
+        var x = 1.0;
+        var y = 1.0;
+        if(height > width)
+          x = height/width;
+        else if (width > height)
+          y = width/height;
+
+        prop = vec2(x,y);
+        console.log("x: " + prop.x + " y: " + prop.y);
+        gl.viewport(0,0,width,height);
+};
     canvas.addEventListener("mousedown", function(e) {
         console.log("mousedown");
 
@@ -151,10 +195,10 @@ function setupCallBacks() {
     });
 
     aniButton.onclick = function() {
-      if (dtInc == 0.0)
-        dtInc = 0.01;
+      if (timeInc == 0.0)
+        timeInc = 0.01;
       else
-        dtInc = 0.0;
+        timeInc = 0.0;
     }
 }
 
@@ -163,14 +207,15 @@ function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    gl.uniform2f(dt_loc, dtx, dty);
-    dtx += dtInc;
-    dty += dtInc;
+    gl.uniform2f(time_loc, timex, timey);
+    timex += timeInc;
+    timey += timeInc;
 
     gl.uniform3fv(dragLoc, drag);
     gl.uniform1i(slideLoc, slide.value);
     gl.uniform1i(dropDownLoc, dropDown.value);
     gl.uniform1f(scaleLoc, scale);
+    gl.uniform2fv(propLoc, prop);
 
     requestAnimFrame(render);
 }

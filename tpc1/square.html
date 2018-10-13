@@ -5,6 +5,7 @@
 attribute vec4 vPosition;
 varying vec4 fPosition;
 
+
 void main(){
     gl_Position = vPosition;
     fPosition = vPosition;
@@ -15,43 +16,53 @@ void main(){
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
 varying vec4 fPosition;
-uniform vec3 drag;
-uniform int func;
-uniform int n;
-uniform vec2 dt;
-uniform float scale;
+uniform vec3 drag;  //allows dragging in the canvas
+uniform int func;   //function to be applied
+uniform int n;      //number of times we want to applya function
+uniform vec2 time;  //Time variable to create animations
+uniform float scale;//apllies zoom
+uniform vec2 prop;  //keeps the canvas proportions working when the window is resized
 
+
+//used to add to complex numbers or subtract if used correctly
+// a - b = a + (-b)
 vec2 addition(vec2 a, vec2 b) {
     float re = a.x + b.x;
     float im = a.y + b.y;
     return vec2(re,im);
 }
 
+//used to multiply two complex numbers
 vec2 multiply(vec2 a, vec2 b) {
     float re = a.x * b.x - a.y * b.y;
     float im = a.x * b.y + a.y * b.x;
     return vec2(re,im);
 }
 
+//used to divide two complex numbers
 vec2 division(vec2 a, vec2 b) {
     float re = (a.x*b.x+a.y*b.y)/(b.x*b.x+b.y*b.y);
     float im = (a.y*b.x-a.x*b.y)/(b.x*b.x+b.y*b.y);
     return vec2(re,im);
 }
 
+//used to obtain the exponencial form of the given complex number
 vec2 exponencial(vec2 a) {
     float re = exp(a.x) * cos(a.y);
     float im = exp(a.x) * sin(a.y);
     return vec2(re,im);
 }
 
+//applys the function desired
 vec2 applyFunc(vec2 z) {
     vec2 w;
 
     if(func == 1) {
+        //w = z
         w = z;
     }
     if(func == 2){
+        //w = z^2
         w = multiply(z,z);
     }
     if(func == 3){
@@ -81,12 +92,12 @@ vec2 applyFunc(vec2 z) {
         w = addition(z,vec2(2.0,0.0));
         w = multiply(multiply(multiply(w,w),addition(z,vec2(-1.0,-2.0))),addition(z,vec2(0.0,1.0)));
     }
-
+    w = addition(w, vec2(cos(time.x), sin(time.y)));
     return w;
 }
 
 
-
+//function given by the professor to convert form hsv to rgb
 vec4 HSVtoRGB(float h, float s, float v)
 {
     //Convert between the HSV and RGB color model.
@@ -156,6 +167,7 @@ vec4 HSVtoRGB(float h, float s, float v)
     return RGB;
 }
 
+//converts a complex number to its polar form
 vec2 cartToPolar(vec2 cart) {
     float theta = atan(cart.y, cart.x);
     theta = theta* 180.0 / 3.14159265358979;
@@ -168,19 +180,19 @@ vec2 cartToPolar(vec2 cart) {
     return vec2(r, theta);
 }
 
+//applies the selected function the n times
 vec2 iterate(vec2 z) {
     int n2 = int(n);
     vec2 w = z;
     for(int i = 0; i < 20; i += 1) {
         if(n2 > 0) {
             w = applyFunc(w);
-            w.x += cos(dt.x);
-            w.y += sin(dt.y);
             n2 -= 1;
         }
     }
     return w;
 }
+//Takes the z applies the func
 vec4 positionToColor2(vec2 w) {
     vec3 color;
     vec2 conv;
@@ -200,15 +212,14 @@ void main() {
     vec4 finalPosition = fPosition;
     finalPosition.x *= scale;
     finalPosition.y *= scale;
-    //finalPosition.x += dt.x;
-    //finalPosition.y += dt.y;
     finalPosition.x += drag.x;
     finalPosition.y += drag.y;
-    //finalPosition.x *= scale;
-    //finalPosition.y *= scale;
-    gl_FragColor = positionToColor2(vec2(finalPosition.x,finalPosition.y));
+    finalPosition.x *= prop.y;
+    finalPosition.y *= prop.x;
+        gl_FragColor = positionToColor2(vec2(finalPosition.x,finalPosition.y));
 }
 </script>
+
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
