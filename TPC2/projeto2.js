@@ -28,7 +28,7 @@ window.onload = function init() {
 	
 	render();
 }
-//ola
+
 function render() {
 	
 	sphereDrawWireFrame(gl, program);
