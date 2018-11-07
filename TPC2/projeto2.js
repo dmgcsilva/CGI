@@ -1,7 +1,8 @@
-var gl, mView, mProjection, mModel, locV, locP, loc, program;
+var gl, canvas, mView, mProjection, mModel, ctm, locV, locP, locM, loc, program;
 var mModel = mat4();
+
 window.onload = function init() {
-    var canvas = document.getElementById("gl-canvas");
+    canvas = document.getElementById("gl-canvas");
     gl = WebGLUtils.setupWebGL(canvas);
     if(!gl) { alert("WebGL isn't available"); }
     
@@ -9,7 +10,7 @@ window.onload = function init() {
 	sphereInit(gl);
     
     // Configure WebGL
-    gl.viewport(0,0,canvas.width, canvas.height);
+    //gl.viewport(0,0,canvas.width, canvas.height);
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
@@ -19,23 +20,44 @@ window.onload = function init() {
 	var at = [0, 0, 0];
     var eye = [1, 1, 1];
     var up = [0, 1, 0];
-    mView = lookAt(eye, at, up);
-    mProjection = ortho(-2,2,-2,2,10,-10);
+    
+	mView = lookAt(eye, at, up);
+	mProjection = ortho(-2,2,-2,2,10,-10);
 	
+	//mModel = mult(translate(0.5, -0.5,0),mModel);
+	/*
 	locV = gl.getUniformLocation(program, "mView");
 	locP = gl.getUniformLocation(program, "mProjection");
-	loc = gl.getUniformLocation(program, "mModel");
-	
+	locM = gl.getUniformLocation(program, "mModel");
+	*/
 	render();
 }
 
-function render() {
-	
-	sphereDrawWireFrame(gl, program);
-	
+function draw(x,y) {
+	locV = gl.getUniformLocation(program, "mView");
+	locP = gl.getUniformLocation(program, "mProjection");
+	locM = gl.getUniformLocation(program, "mModel");
 	gl.uniformMatrix4fv(locV, false, flatten(mView));
 	gl.uniformMatrix4fv(locP, false, flatten(mProjection));
-	gl.uniformMatrix4fv(loc, false, flatten(mModel));
+	gl.uniformMatrix4fv(locM, false, flatten(mModel));
+}
+
+function render() {
+	gl.viewport(0,0,canvas.width/2, canvas.height/2);
+	sphereDrawWireFrame(gl, program);
+	draw();
+	
+	gl.viewport(canvas.width/2,0,canvas.width/2, canvas.height/2);
+	sphereDrawWireFrame(gl, program);
+	draw();
+	
+	gl.viewport(0,canvas.height/2,canvas.width/2, canvas.height/2);
+	sphereDrawWireFrame(gl, program);
+	draw();
+	
+	gl.viewport(canvas.width/2, canvas.height/2,canvas.width/2, canvas.height/2);
+	sphereDrawWireFrame(gl, program);
+	draw();
 	
 	requestAnimFrame(render);
 }
