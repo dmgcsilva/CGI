@@ -8,9 +8,7 @@ window.onload = function init() {
     
 	cubeInit(gl);
 	sphereInit(gl);
-    
-    // Configure WebGL
-    //gl.viewport(0,0,canvas.width, canvas.height);
+
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
@@ -18,18 +16,12 @@ window.onload = function init() {
 	sphereDrawWireFrame(gl, program);
 	
 	var at = [0, 0, 0];
-    var eye = [1, 1, 1];
+    var eye = [0, 0, 0];
     var up = [0, 1, 0];
     
 	mView = lookAt(eye, at, up);
-	mProjection = ortho(-2,2,-2,2,10,-10);
+	mProjection = ortho(-1,1,-1,1,10,-10);
 	
-	//mModel = mult(translate(0.5, -0.5,0),mModel);
-	/*
-	locV = gl.getUniformLocation(program, "mView");
-	locP = gl.getUniformLocation(program, "mProjection");
-	locM = gl.getUniformLocation(program, "mModel");
-	*/
 	render();
 }
 
