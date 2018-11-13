@@ -6,11 +6,7 @@ var gl, canvas, mProjection, mModelView = mat4(), ctm, locP, locM, loc, program;
 var mModel = mat4(), mView = mat4();
 var multipleView = false, alpha = 30, beta = 30;
 var button1View, button4Views, object, filling, aSlide, bSlide;
-<<<<<<< HEAD
 var proj,text,a,l,fov;
-=======
-var proj;
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -51,19 +47,14 @@ window.onload = function init() {
     filling = fillingDropDown();
 
     document.body.appendChild(document.createElement("p"));
-<<<<<<< HEAD
 	text = document.createTextNode("Axonometric	");
     document.body.appendChild(text);
-=======
-
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
     document.body.appendChild(document.createTextNode("Alpha: "));
     aSlide = createSlide("alphaSlide", 1, 89, 36.5, 0.5);
     alpha = aSlide.value;
     document.body.appendChild(document.createTextNode("Beta: "));
     bSlide = createSlide("betaSlide", 1, 89, 36.5, 0.5);
     beta = bSlide.value;
-<<<<<<< HEAD
 	
 	document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Oblique	");
@@ -82,8 +73,6 @@ window.onload = function init() {
     fovSlide = createSlide("fovSlide", 1, 180, 90, 1);
     fov = fovSlide.value;
 	
-=======
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
     setupCallbacks();
 	render();
 }
@@ -97,7 +86,6 @@ function setupCallbacks() {
         beta = bSlide.value;
         console.log("Beta: " + beta);
     };
-<<<<<<< HEAD
 	alpSlide.onchange = function() {
         a = radians(alpSlide.value);
         console.log("alpha: " + alpSlide.value);
@@ -110,8 +98,7 @@ function setupCallbacks() {
         fov = fovSlide.value;
         console.log("fov: " + fov);
     };
-=======
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
+
 }
 function projectionDropDown() {
     dropDown = document.createElement("select");
@@ -126,13 +113,9 @@ function projectionDropDown() {
 function objectDropDown() {
     dropDown = document.createElement("select");
     dropDown.id = "objectSelect";
-<<<<<<< HEAD
 	dropDown.options.add( new Option("Square",SQUARE));
 	dropDown.options.add( new Option("Sphere",SPHERE));
-=======
-	dropDown.options.add( new Option("Sphere",SPHERE));
 	dropDown.options.add( new Option("Square",SQUARE));
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
 	dropDown.options.add( new Option("Cylinder",CYLINDER));
 	document.body.appendChild(dropDown);
 	return dropDown;
@@ -281,33 +264,18 @@ function obliqueProjection() {
 	var at = [0,0,0];
 	var eye = [1,1,1];
 	var up = [0,1,0];
-<<<<<<< HEAD
-	
 	
 	var rx = -Math.cos(a); //faz sentido por aqui o l???
 	var ry = -Math.sin(a);
-=======
-
-	var a = 45;
-	var l = 1;
-	var rx = -l*Math.cos(a);
-	var ry = -l*Math.sin(a);
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
 
 	mView = lookAt(eye, at, up);
 	mProjection = ortho(-1,1,-1,1,10,-10);
 
-<<<<<<< HEAD
 	mModel = scalem(rx,ry,l);
 
 	draw();
 	
 	mModel = mat4();
-=======
-	//mModel = mult(scalem(rx,ry,1),mModel);
-
-	draw();
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
 }
 
 
@@ -315,20 +283,10 @@ function perspectiveProjection() {
 	var at = [0, 0, 0];
     var eye = [1, 1, 1];
     var up = [0, 1, 0];
-<<<<<<< HEAD
-	
 	var aspect = 1;
 
 	mView = lookAt(eye, at, up);
 	mProjection = perspective(fov,aspect,0,3);
-=======
-
-	var fov = 90;
-	var aspect = 1;
-
-	mView = lookAt(eye, at, up);
-	mProjection = perspective(fov,aspect,0,1);
->>>>>>> 94d348461bdd86f7eb008ef2e2715740420391a4
 
 	draw();
 }
