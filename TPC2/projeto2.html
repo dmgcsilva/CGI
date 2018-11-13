@@ -3,16 +3,21 @@
 <head>
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
-uniform mat4 mProjection; uniform mat4 mView;
-uniform mat4 mModel;
+attribute vec4 vNormal;
+uniform mat4 mProjection;
+uniform mat4 mModelView;
+varying vec4 fColor;
 void main(){
-    gl_Position = mProjection * mView * mModel * vPosition;
+    gl_Position = mProjection * mModelView * vPosition;
+    fColor = vNormal;
 }
 </script>
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
+varying vec4 fColor;
 void main() {
     gl_FragColor = vec4(0, 1.0, 0.0, 1.0);
+    gl_FragColor = abs(fColor);
 }
 </script>
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
@@ -24,7 +29,7 @@ void main() {
 <script type="text/javascript" src="projeto2.js"></script>
 </head>
 <body>
-    <title>aula6</title>
+    <title>Projeto 2</title>
     <canvas id="gl-canvas" width="512" height="512">
         Oops... your browser doesn't support the HTML5 canvas element"
     </canvas>
