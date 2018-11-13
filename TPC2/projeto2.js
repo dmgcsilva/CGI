@@ -268,6 +268,14 @@ function obliqueProjection() {
 	var rx = -Math.cos(a); //faz sentido por aqui o l???
 	var ry = -Math.sin(a);
 
+	/*var rty = -l;
+	mProjection = [
+	1, 0, -rty*Math.cos(a), 0,
+	0, 1, -rty*Math.sin(a), 0,
+	0, 0, 0, 0,
+	0, 0, 0, 1];
+	*/
+	
 	mView = lookAt(eye, at, up);
 	mProjection = ortho(-1,1,-1,1,10,-10);
 
