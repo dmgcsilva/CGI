@@ -1,7 +1,12 @@
-var gl, canvas, mView, mProjection, mModel, ctm, locV, locP, locM, loc, program;
-var mModel = mat4();
-var multipleView = true, alpha = 30, beta = 30;
-var button1View, button4Views, object = "Cilindro", filling = "Filled";
+const SQUARE = "Square", SPHERE = "Sphere", CYLINDER = "Cylinder";
+const OBLIQUE = "Oblique", AXONOMETRIC = "Axonometric", PRESPECTIVE = "Prespective";
+const FILLED = "Filled", WIRE = "Wire";
+
+var gl, canvas, mProjection, mModelView = mat4(), ctm, locP, locM, loc, program;
+var mModel = mat4(), mView = mat4();
+var multipleView = false, alpha = 30, beta = 30;
+var button1View, button4Views, object, filling, aSlide, bSlide;
+var proj;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -19,9 +24,8 @@ window.onload = function init() {
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    locV = gl.getUniformLocation(program, "mView");
 	locP = gl.getUniformLocation(program, "mProjection");
-	locM = gl.getUniformLocation(program, "mModel");
+	locM = gl.getUniformLocation(program, "mModelView");
 
 	var at = [0, 0, 0];
     var eye = [1, 1, 1];
@@ -38,7 +42,59 @@ window.onload = function init() {
         multipleView = true;
     });
 
+	proj = projectionDropDown();
+    object = objectDropDown();
+    filling = fillingDropDown();
+
+    document.body.appendChild(document.createElement("p"));
+
+    document.body.appendChild(document.createTextNode("Alpha: "));
+    aSlide = createSlide("alphaSlide", 1, 89, 36.5, 0.5);
+    alpha = aSlide.value;
+    document.body.appendChild(document.createTextNode("Beta: "));
+    bSlide = createSlide("betaSlide", 1, 89, 36.5, 0.5);
+    beta = bSlide.value;
+    setupCallbacks();
 	render();
+}
+
+function setupCallbacks() {
+    aSlide.onchange = function() {
+        alpha = aSlide.value;
+        console.log("alpha: " + alpha);
+    };
+    bSlide.onchange = function() {
+        beta = bSlide.value;
+        console.log("Beta: " + beta);
+    };
+}
+function projectionDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "projSelect";
+	dropDown.options.add( new Option("Oblique",OBLIQUE));
+	dropDown.options.add( new Option("Axionometric",AXONOMETRIC));
+	dropDown.options.add( new Option("Perspective",PRESPECTIVE));
+	document.body.appendChild(dropDown);
+	return dropDown;
+}
+
+function objectDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "objectSelect";
+	dropDown.options.add( new Option("Sphere",SPHERE));
+	dropDown.options.add( new Option("Square",SQUARE));
+	dropDown.options.add( new Option("Cylinder",CYLINDER));
+	document.body.appendChild(dropDown);
+	return dropDown;
+}
+
+function fillingDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "fillingSelect";
+	dropDown.options.add( new Option("Filled",FILLED));
+	dropDown.options.add( new Option("Wire Frame",WIRE));
+	document.body.appendChild(dropDown);
+	return dropDown;
 }
 
 function createButton(name, id, func) {
@@ -64,41 +120,41 @@ function createSlide(id, min, max, def, step) {
 }
 
 function draw() {
-    gl.uniformMatrix4fv(locV, false, flatten(mView));
+    mModelView = mult(mView,mModel);
 	gl.uniformMatrix4fv(locP, false, flatten(mProjection));
-	gl.uniformMatrix4fv(locM, false, flatten(mModel));
+	gl.uniformMatrix4fv(locM, false, flatten(mModelView));
 
-    switch (object) {
-        case "Quadrado":
-            switch (filling) {
-                case "Filled":
+    switch (object.value) {
+        case SQUARE:
+            switch (filling.value) {
+                case FILLED:
                     cubeDrawFilled(gl, program);
                     break;
-                case "Wire":
+                case WIRE:
                     cubeDrawWireFrame(gl, program);
                     break;
                 default:
                     alert("Filling undifined");
             }
             break;
-        case "Esfera":
-            switch (filling) {
-                case "Filled":
+        case SPHERE:
+            switch (filling.value) {
+                case FILLED:
                     sphereDrawFilled(gl, program);
                     break;
-                case "Wire":
+                case WIRE:
                     sphereDrawWireFrame(gl, program);
                     break;
                 default:
                     alert("Filling undifined");
                 }
             break;
-        case "Cilindro":
-            switch (filling) {
-                case "Filled":
+        case CYLINDER:
+            switch (filling.value) {
+                case FILLED:
                     cylinderDrawFilled(gl, program);
                     break;
-                case "Wire":
+                case WIRE:
                     cylinderDrawWireFrame(gl, program);
                     break;
                 default:
@@ -108,6 +164,17 @@ function draw() {
         default:
             alert("object undifined");
     }
+}
+
+function seeFront() {
+	var at = [0, 0, 0];
+    var eye = [0, 0, 0];
+    var up = [0, 1, 0];
+
+	mView = lookAt(eye, at, up);
+	mProjection = ortho(-1,1,-1,1,10,-10);
+
+    draw();
 }
 
 function seeLeftSide() {
@@ -132,7 +199,7 @@ function seeAboveSide() {
     draw();
 }
 
-function axonemetricProjection() {
+function axonometricProjection() {
     var at = [0, 0, 0];
     var eye = [1, 1, 1];
     var up = [0, 1, 0];
@@ -148,12 +215,67 @@ function axonemetricProjection() {
 	mView = lookAt(eye, at, up);
 	mProjection = ortho(-1,1,-1,1,10,-10);
     var mModel2 = mModel;
-    mModel = mult(scalem(r1,r2,r3),mModel);
 
+    var max = Math.max(r1, r2, r3);
+    r1 = r1/max;
+    r2 = r2/max;
+    r1 = r3/max;
+
+    mModel = mult(scalem(r2,r1,r3),mModel);
     draw();
 
-    mModel = mModel2;
+    mModel = mat4();
 }
+
+function obliqueProjection() {
+	var at = [0,0,0];
+	var eye = [1,1,1];
+	var up = [0,1,0];
+
+	var a = 45;
+	var l = 1;
+	var rx = -l*Math.cos(a);
+	var ry = -l*Math.sin(a);
+
+	mView = lookAt(eye, at, up);
+	mProjection = ortho(-1,1,-1,1,10,-10);
+
+	//mModel = mult(scalem(rx,ry,1),mModel);
+
+	draw();
+}
+
+
+function perspectiveProjection() {
+	var at = [0, 0, 0];
+    var eye = [1, 1, 1];
+    var up = [0, 1, 0];
+
+	var fov = 90;
+	var aspect = 1;
+
+	mView = lookAt(eye, at, up);
+	mProjection = perspective(fov,aspect,0,1);
+
+	draw();
+}
+
+function selectForthProj() {
+    switch (proj.value) {
+        case OBLIQUE:
+            obliqueProjection();
+            break;
+        case AXONOMETRIC:
+            axonometricProjection();
+            break;
+        case PRESPECTIVE:
+            perspectiveProjection();
+            break;
+        default:
+            obliqueProjection();
+    }
+}
+
 
 function render() {
     //gl.depthFunc(gl.LESS);
@@ -161,7 +283,7 @@ function render() {
     if(multipleView) {
         //Quadrante superior esquerdo
     	gl.viewport(0,canvas.height/2,canvas.width/2, canvas.height/2);
-        draw();
+        seeFront();
 
 
         //Quadrante superior direito
@@ -175,10 +297,10 @@ function render() {
 
         //Quadrante inferior direito
         gl.viewport(canvas.width/2,0,canvas.width/2, canvas.height/2);
-        axonemetricProjection();
+        selectForthProj();
     } else {
         gl.viewport(0,0,canvas.width, canvas.height);
-        axonemetricProjection();
+        selectForthProj();
     }
 
 	requestAnimFrame(render);

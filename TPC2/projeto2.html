@@ -5,11 +5,10 @@
 attribute vec4 vPosition;
 attribute vec4 vNormal;
 uniform mat4 mProjection;
-uniform mat4 mView;
-uniform mat4 mModel;
+uniform mat4 mModelView;
 varying vec4 fColor;
 void main(){
-    gl_Position = mProjection * mView * mModel * vPosition;
+    gl_Position = mProjection * mModelView * vPosition;
     fColor = vNormal;
 }
 </script>
