@@ -4,9 +4,10 @@ const FILLED = "Filled", WIRE = "Wire";
 
 var gl, canvas, mProjection, mModelView = mat4(), ctm, locP, locM, loc, program;
 var mModel = mat4(), mView = mat4();
-var multipleView = false, alpha = 30, beta = 30;
-var button1View, button4Views, object, filling, aSlide, bSlide;
-var proj,text,a,l,fov;
+var multipleView = false;
+var button1View, button4Views, object, filling, gammaSlide, thetaSlide;
+var proj,text,a,l,fov, theta, gamma;
+var resizeX, resizeY, scale, zoomSlide;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -18,6 +19,7 @@ window.onload = function init() {
     cylinderInit(gl);
     bunnyInit(gl);
 
+    calcResize();
     // Configure WebGL
     gl.viewport(0,0,canvas.width, canvas.height);
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -47,15 +49,19 @@ window.onload = function init() {
     object = objectDropDown();
     filling = fillingDropDown();
 
+    document.body.appendChild(document.createTextNode("Zoom: "));
+    zoomSlide = createSlide("zoomSlide", 0.05, 15, 1, 0.05);
+    scale = zoomSlide.value;
+
     document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Axonometric	");
     document.body.appendChild(text);
-    document.body.appendChild(document.createTextNode("Alpha: "));
-    aSlide = createSlide("alphaSlide", 1, 89, 36.83, 0.5);
-    alpha = aSlide.value;
-    document.body.appendChild(document.createTextNode("Beta: "));
-    bSlide = createSlide("betaSlide", 1, 89, 16.33, 0.5);
-    beta = bSlide.value;
+    document.body.appendChild(document.createTextNode("Gamma: "));
+    gammaSlide = createSlide("gammaSlide", 1, 89, 50, 0.5);
+    gamma = gammaSlide.value;
+    document.body.appendChild(document.createTextNode("Theta: "));
+    thetaSlide = createSlide("thetaSlide", 1, 89, 50, 0.5);
+    theta = thetaSlide.value;
 
 	document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Oblique	");
@@ -74,18 +80,29 @@ window.onload = function init() {
     fovSlide = createSlide("fovSlide", 1, 180, 90, 1);
     fov = fovSlide.value;
 
+
     setupCallbacks();
 	render();
 }
+function calcResize() {
+    width = window.innerWidth;
+    heigth = window.innerHeight - 200;
+    canvas.width = width;
+    canvas.height = heigth;
+
+    var min = Math.min(heigth,width);
+    resizeY = heigth/min;
+    resizeX = width/min;
+}
 
 function setupCallbacks() {
-    aSlide.onchange = function() {
-        alpha = aSlide.value;
-        console.log("alpha: " + alpha);
+    gammaSlide.onchange = function() {
+        gamma = gammaSlide.value;
+        console.log("gamma: " + gamma);
     };
-    bSlide.onchange = function() {
-        beta = bSlide.value;
-        console.log("Beta: " + beta);
+    thetaSlide.onchange = function() {
+        theta = thetaSlide.value;
+        console.log("theta: " + theta);
     };
 	alpSlide.onchange = function() {
         a = radians(alpSlide.value);
@@ -98,6 +115,13 @@ function setupCallbacks() {
 	fovSlide.onchange = function() {
         fov = fovSlide.value;
         console.log("fov: " + fov);
+    };
+	zoomSlide.onchange = function() {
+        scale = zoomSlide.value;
+        console.log("zoom: " + zoom);
+    };
+    window.onresize = function() {
+        calcResize();
     };
 
 }
@@ -157,6 +181,9 @@ function draw() {
 	gl.uniformMatrix4fv(locP, false, flatten(mProjection));
 	gl.uniformMatrix4fv(locM, false, flatten(mModelView));
 
+    mModel = mat4();
+    mView = mat4();
+
     switch (object.value) {
         case SQUARE:
             switch (filling.value) {
@@ -206,7 +233,7 @@ function seeFront() {
     var up = [0, 1, 0];
 
 	mView = lookAt(eye, at, up);
-	mProjection = ortho(-1,1,-1,1,10,-10);
+    mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
     draw();
 }
@@ -217,7 +244,7 @@ function seeLeftSide() {
     var up = [0, 1, 0];
 
 	mView = lookAt(eye, at, up);
-	mProjection = ortho(-1,1,-1,1,10,-10);
+	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
     draw();
 }
@@ -228,7 +255,7 @@ function seeAboveSide() {
     var up = [0, 0, 1];
 
 	mView = lookAt(eye, at, up);
-	mProjection = ortho(-1,1,-1,1,10,-10);
+	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
     draw();
 }
@@ -238,64 +265,40 @@ function axonometricProjection() {
     var eye = [1, 1, 1];
     var up = [0, 1, 0];
 
-    var alpha2 = radians(alpha);
-    var beta2 = radians(beta);
 
-    var t = Math.atan(Math.sqrt(Math.tan(alpha2)/Math.tan(beta2))) - Math.PI/2,
-    y = Math.asin(Math.sqrt(Math.tan(alpha2)*Math.tan(beta2))),
-    r1 = Math.cos(y),
-    r2 = Math.cos(t)/Math.cos(beta2),
-    r3 = -Math.sin(t)/Math.cos(alpha2);
-	mView = lookAt(eye, at, up);
-
-    var mModel2 = mModel;
-
-    var max = Math.max(r1, r2, r3);
-    r1 = r1/max;
-    r2 = r2/max;
-    r3 = r3/max;
-    mModel = mult(scalem(r2,r1,r3),mModel);
-    mProjection = ortho(-1,1,-1,1,10,-10);
+	mView = mat4();
+    mModel = mult(rotateX(gamma),rotateY(theta));
+    mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
     draw();
 
     mModel = mat4();
 }
 
 function obliqueProjection() {
-	var at = [0,0,0];
-	var eye = [1,1,1];
-	var up = [0,1,0];
+	var rx = -l*Math.cos(a);
+	var ry = -l*Math.sin(a);
 
-	var rx = -Math.cos(a); //faz sentido por aqui o l???
-	var ry = -Math.sin(a);
+	mModel = mat4([
+	1, 0,  rx, 0,
+	0, 1, ry, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1]);
 
-	/*var rty = -l;
-	mProjection = [
-	1, 0, -rty*Math.cos(a), 0,
-	0, 1, -rty*Math.sin(a), 0,
-	0, 0, 0, 0,
-	0, 0, 0, 1];
-	*/
-
-	mView = lookAt(eye, at, up);
-	mProjection = ortho(-1,1,-1,1,10,-10);
-
-	mModel = scalem(rx,ry,l);
+	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
 	draw();
-
-	mModel = mat4();
+    mModel = mat4();
 }
 
 
 function perspectiveProjection() {
 	var at = [0, 0, 0];
-    var eye = [1, 1, 1];
+    var eye = [2, 2, 1];
     var up = [0, 1, 0];
-	var aspect = 1;
+	var aspect = canvas.width/canvas.height;
 
 	mView = lookAt(eye, at, up);
-	mProjection = perspective(fov,aspect,0,3);
+	mProjection = perspective(fov*scale,aspect,0.1,10);
 
 	draw();
 }
@@ -319,7 +322,7 @@ function selectForthProj() {
 
 function render() {
     //gl.depthFunc(gl.LESS);
-    gl.enable(gl.CULL_FACE)
+    gl.enable(gl.DEPTH_TEST);
     if(multipleView) {
         //Quadrante superior esquerdo
     	gl.viewport(0,canvas.height/2,canvas.width/2, canvas.height/2);
