@@ -16,6 +16,7 @@ window.onload = function init() {
 	cubeInit(gl);
 	sphereInit(gl);
     cylinderInit(gl);
+    bunnyInit(gl);
 
     // Configure WebGL
     gl.viewport(0,0,canvas.width, canvas.height);
@@ -50,12 +51,12 @@ window.onload = function init() {
 	text = document.createTextNode("Axonometric	");
     document.body.appendChild(text);
     document.body.appendChild(document.createTextNode("Alpha: "));
-    aSlide = createSlide("alphaSlide", 1, 89, 36.5, 0.5);
+    aSlide = createSlide("alphaSlide", 1, 89, 36.83, 0.5);
     alpha = aSlide.value;
     document.body.appendChild(document.createTextNode("Beta: "));
-    bSlide = createSlide("betaSlide", 1, 89, 36.5, 0.5);
+    bSlide = createSlide("betaSlide", 1, 89, 16.33, 0.5);
     beta = bSlide.value;
-	
+
 	document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Oblique	");
     document.body.appendChild(text);
@@ -65,14 +66,14 @@ window.onload = function init() {
     document.body.appendChild(document.createTextNode("l: "));
     lSlide = createSlide("lSlide", 0.1, 1, 0.5, 0.05);
     l = lSlide.value;
-	
+
 	document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Perspective ");
     document.body.appendChild(text);
     document.body.appendChild(document.createTextNode("Fov: "));
     fovSlide = createSlide("fovSlide", 1, 180, 90, 1);
     fov = fovSlide.value;
-	
+
     setupCallbacks();
 	render();
 }
@@ -113,7 +114,6 @@ function projectionDropDown() {
 function objectDropDown() {
     dropDown = document.createElement("select");
     dropDown.id = "objectSelect";
-	dropDown.options.add( new Option("Square",SQUARE));
 	dropDown.options.add( new Option("Sphere",SPHERE));
 	dropDown.options.add( new Option("Square",SQUARE));
 	dropDown.options.add( new Option("Cylinder",CYLINDER));
@@ -174,6 +174,7 @@ function draw() {
             switch (filling.value) {
                 case FILLED:
                     sphereDrawFilled(gl, program);
+                    //bunnyDrawFilled(gl, program);
                     break;
                 case WIRE:
                     sphereDrawWireFrame(gl, program);
@@ -237,8 +238,8 @@ function axonometricProjection() {
     var eye = [1, 1, 1];
     var up = [0, 1, 0];
 
-    var alpha2 = alpha * Math.PI/180;
-    var beta2 = beta * Math.PI/180;
+    var alpha2 = radians(alpha);
+    var beta2 = radians(beta);
 
     var t = Math.atan(Math.sqrt(Math.tan(alpha2)/Math.tan(beta2))) - Math.PI/2,
     y = Math.asin(Math.sqrt(Math.tan(alpha2)*Math.tan(beta2))),
@@ -246,15 +247,15 @@ function axonometricProjection() {
     r2 = Math.cos(t)/Math.cos(beta2),
     r3 = -Math.sin(t)/Math.cos(alpha2);
 	mView = lookAt(eye, at, up);
-	mProjection = ortho(-1,1,-1,1,10,-10);
+
     var mModel2 = mModel;
 
     var max = Math.max(r1, r2, r3);
     r1 = r1/max;
     r2 = r2/max;
-    r1 = r3/max;
-
+    r3 = r3/max;
     mModel = mult(scalem(r2,r1,r3),mModel);
+    mProjection = ortho(-1,1,-1,1,10,-10);
     draw();
 
     mModel = mat4();
@@ -264,7 +265,7 @@ function obliqueProjection() {
 	var at = [0,0,0];
 	var eye = [1,1,1];
 	var up = [0,1,0];
-	
+
 	var rx = -Math.cos(a); //faz sentido por aqui o l???
 	var ry = -Math.sin(a);
 
@@ -275,14 +276,14 @@ function obliqueProjection() {
 	0, 0, 0, 0,
 	0, 0, 0, 1];
 	*/
-	
+
 	mView = lookAt(eye, at, up);
 	mProjection = ortho(-1,1,-1,1,10,-10);
 
 	mModel = scalem(rx,ry,l);
 
 	draw();
-	
+
 	mModel = mat4();
 }
 
