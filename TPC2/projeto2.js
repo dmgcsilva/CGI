@@ -8,6 +8,7 @@ var multipleView = false;
 var button1View, button4Views, object, filling, gammaSlide, thetaSlide;
 var proj,text,a,l,fov, theta, gamma;
 var resizeX, resizeY, scale, zoomSlide;
+var x,y;
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -53,6 +54,10 @@ window.onload = function init() {
     zoomSlide = createSlide("zoomSlide", 0.05, 15, 1, 0.05);
     scale = zoomSlide.value;
 
+	document.body.appendChild(document.createTextNode(" Fov: "));
+    fovSlide = createSlide("fovSlide", 1, 100, 30, 1);
+    fov = fovSlide.value;
+
     document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Axonometric	");
     document.body.appendChild(text);
@@ -76,10 +81,14 @@ window.onload = function init() {
 	document.body.appendChild(document.createElement("p"));
 	text = document.createTextNode("Perspective ");
     document.body.appendChild(text);
-    document.body.appendChild(document.createTextNode("Fov: "));
-    fovSlide = createSlide("fovSlide", 1, 180, 90, 1);
-    fov = fovSlide.value;
-
+	text = document.createTextNode(" X ");
+    document.body.appendChild(text);
+	xSlide = createSlide("xSlide", -5, 5, 0, 0.5);
+    x = xSlide.value;
+	text = document.createTextNode(" Y ");
+	document.body.appendChild(text);
+    ySlide = createSlide("ySlide", -5, 5, 0, 0.5);
+    y = ySlide.value;
 
     setupCallbacks();
 	render();
@@ -118,12 +127,17 @@ function setupCallbacks() {
     };
 	zoomSlide.onchange = function() {
         scale = zoomSlide.value;
-        console.log("zoom: " + zoom);
+        console.log("zoom: " + scale);
     };
     window.onresize = function() {
         calcResize();
     };
-
+	xSlide.onchange = function() {
+		x=xSlide.value;
+	};
+	ySlide.onchange = function() {
+		y=ySlide.value;
+	};
 }
 function projectionDropDown() {
     dropDown = document.createElement("select");
@@ -293,7 +307,7 @@ function obliqueProjection() {
 
 function perspectiveProjection() {
 	var at = [0, 0, 0];
-    var eye = [2, 2, 1];
+    var eye = [x, y, 3];
     var up = [0, 1, 0];
 	var aspect = canvas.width/canvas.height;
 
