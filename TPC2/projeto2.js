@@ -1,4 +1,4 @@
-const SQUARE = "Square", SPHERE = "Sphere", CYLINDER = "Cylinder";
+const SQUARE = "Square", SPHERE = "Sphere", CYLINDER = "Cylinder", BUNNY = "Bunny";
 const OBLIQUE = "Oblique", AXONOMETRIC = "Axonometric", PRESPECTIVE = "Prespective";
 const FILLED = "Filled", WIRE = "Wire";
 
@@ -155,6 +155,7 @@ function objectDropDown() {
 	dropDown.options.add( new Option("Sphere",SPHERE));
 	dropDown.options.add( new Option("Square",SQUARE));
 	dropDown.options.add( new Option("Cylinder",CYLINDER));
+	dropDown.options.add( new Option("Bunny",BUNNY));
 	document.body.appendChild(dropDown);
 	return dropDown;
 }
@@ -215,7 +216,6 @@ function draw() {
             switch (filling.value) {
                 case FILLED:
                     sphereDrawFilled(gl, program);
-                    //bunnyDrawFilled(gl, program);
                     break;
                 case WIRE:
                     sphereDrawWireFrame(gl, program);
@@ -236,6 +236,18 @@ function draw() {
                     alert("Filling undifined");
             }
             break;
+        case BUNNY:
+            switch (filling.value) {
+                case FILLED:
+                    bunnyDrawFilled(gl, program);
+                    break;
+                case WIRE:
+                    bunnyDrawWireFrame(gl,program);
+                    break;
+                default:
+                    alert("Filling undifined");
+            }
+            break;
         default:
             alert("object undifined");
     }
@@ -247,7 +259,7 @@ function seeFront() {
     var up = [0, 1, 0];
 
 	mView = lookAt(eye, at, up);
-    mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
+    mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-1,1);
 
     draw();
 }
