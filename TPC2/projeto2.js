@@ -6,9 +6,11 @@ var gl, canvas, mProjection, mModelView = mat4(), ctm, locP, locM, loc, program;
 var mModel = mat4(), mView = mat4();
 var multipleView = false;
 var button1View, button4Views, object, filling, gammaSlide, thetaSlide;
-var proj,text,a,l,fov, theta, gamma;
+var proj,a,l,fov, theta, gamma;
 var resizeX, resizeY, scale, zoomSlide;
 var x,y;
+
+/*This was made by Diogo Silva 50548 and Joao Silva 50651*/
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
@@ -38,6 +40,8 @@ window.onload = function init() {
 	mView = lookAt(eye, at, up);
 	mProjection = ortho(-1,1,-1,1,10,-10);
 
+    //From this point on is mainly HTML in this function
+
     document.body.appendChild(document.createElement("p"));
     button1View = createButton("1 Projecao", "b1view", function() {
         multipleView = false;
@@ -59,7 +63,7 @@ window.onload = function init() {
     fov = fovSlide.value;
 
     document.body.appendChild(document.createElement("p"));
-	text = document.createTextNode("Axonometric	");
+	var text = document.createTextNode("Axonometric	");
     document.body.appendChild(text);
     document.body.appendChild(document.createTextNode("Gamma: "));
     gammaSlide = createSlide("gammaSlide", 1, 89, 50, 0.5);
@@ -107,27 +111,21 @@ function calcResize() {
 function setupCallbacks() {
     gammaSlide.onchange = function() {
         gamma = gammaSlide.value;
-        console.log("gamma: " + gamma);
     };
     thetaSlide.onchange = function() {
         theta = thetaSlide.value;
-        console.log("theta: " + theta);
     };
 	alpSlide.onchange = function() {
         a = radians(alpSlide.value);
-        console.log("alpha: " + alpSlide.value);
     };
     lSlide.onchange = function() {
         l = lSlide.value;
-        console.log("l: " + l);
     };
 	fovSlide.onchange = function() {
         fov = fovSlide.value;
-        console.log("fov: " + fov);
     };
 	zoomSlide.onchange = function() {
         scale = zoomSlide.value;
-        console.log("zoom: " + scale);
     };
     window.onresize = function() {
         calcResize();
@@ -139,58 +137,8 @@ function setupCallbacks() {
 		y=ySlide.value;
 	};
 }
-function projectionDropDown() {
-    dropDown = document.createElement("select");
-    dropDown.id = "projSelect";
-	dropDown.options.add( new Option("Oblique",OBLIQUE));
-	dropDown.options.add( new Option("Axionometric",AXONOMETRIC));
-	dropDown.options.add( new Option("Perspective",PRESPECTIVE));
-	document.body.appendChild(dropDown);
-	return dropDown;
-}
 
-function objectDropDown() {
-    dropDown = document.createElement("select");
-    dropDown.id = "objectSelect";
-	dropDown.options.add( new Option("Sphere",SPHERE));
-	dropDown.options.add( new Option("Square",SQUARE));
-	dropDown.options.add( new Option("Cylinder",CYLINDER));
-	dropDown.options.add( new Option("Bunny",BUNNY));
-	document.body.appendChild(dropDown);
-	return dropDown;
-}
-
-function fillingDropDown() {
-    dropDown = document.createElement("select");
-    dropDown.id = "fillingSelect";
-	dropDown.options.add( new Option("Filled",FILLED));
-	dropDown.options.add( new Option("Wire Frame",WIRE));
-	document.body.appendChild(dropDown);
-	return dropDown;
-}
-
-function createButton(name, id, func) {
-  button = document.createElement("INPUT");
-  button.setAttribute("type", "button");
-  button.id = id;
-  button.value = name;
-  button.onclick = func;
-  document.body.appendChild(button);
-  return button;
-}
-
-function createSlide(id, min, max, def, step) {
-    var slide = document.createElement("INPUT");
-    slide.setAttribute("type", "range");
-    slide.id = id;
-    slide.defaultValue = def;
-    slide.step = step;
-    slide.max = max;
-    slide.min = min;
-    document.body.appendChild(slide);
-    return slide;
-}
-
+//loads data into the shader and represents the desired object
 function draw() {
     mModelView = mult(mView,mModel);
 	gl.uniformMatrix4fv(locP, false, flatten(mProjection));
@@ -253,12 +201,17 @@ function draw() {
     }
 }
 
+/*Here we defined the 6 functions used to represent each projection required*/
+
 function seeFront() {
 	var at = [0, 0, 0];
     var eye = [0, 0, 0];
     var up = [0, 1, 0];
 
 	mView = lookAt(eye, at, up);
+    mModel = mat4();
+    if (object.value == BUNNY)
+        mModel = mult(mModel,translate(0,-0.1,0));
     mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-1,1);
 
     draw();
@@ -270,6 +223,9 @@ function seeLeftSide() {
     var up = [0, 1, 0];
 
 	mView = lookAt(eye, at, up);
+    mModel = mat4();
+    if (object.value == BUNNY)
+        mModel = mult(mModel,translate(0,-0.1,0));
 	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
     draw();
@@ -281,23 +237,17 @@ function seeAboveSide() {
     var up = [0, 0, 1];
 
 	mView = lookAt(eye, at, up);
+    mModel = mat4();
 	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
     draw();
 }
 
 function axonometricProjection() {
-    var at = [0, 0, 0];
-    var eye = [1, 1, 1];
-    var up = [0, 1, 0];
-
-
-	mView = mat4();
+    mView = mat4();
     mModel = mult(rotateX(gamma),rotateY(theta));
     mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
     draw();
-
-    mModel = mat4();
 }
 
 function obliqueProjection() {
@@ -309,26 +259,28 @@ function obliqueProjection() {
 	0, 1, ry, 0,
 	0, 0, 1, 0,
 	0, 0, 0, 1]);
-
+    if (object.value == BUNNY)
+        mModel = mult(mModel,translate(0,-0.1,0));
 	mProjection = ortho(-1*resizeX/scale,1*resizeX/scale,-1*resizeY/scale,1*resizeY/scale,-10,10);
 
 	draw();
-    mModel = mat4();
 }
-
 
 function perspectiveProjection() {
 	var at = [0, 0, 0];
+    if (object.value == BUNNY)
+        var at = [0, 0.1, 0];
     var eye = [x, y, 3];
     var up = [0, 1, 0];
 	var aspect = canvas.width/canvas.height;
 
 	mView = lookAt(eye, at, up);
-	mProjection = perspective(fov*scale,aspect,0.1,10);
+	mProjection = perspective(fov,aspect,0.1,10);
 
 	draw();
 }
 
+/*Basic switch to represent the appropriate projection for the last quadrant*/
 function selectForthProj() {
     switch (proj.value) {
         case OBLIQUE:
@@ -345,9 +297,7 @@ function selectForthProj() {
     }
 }
 
-
 function render() {
-    //gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     if(multipleView) {
         //Quadrante superior esquerdo
@@ -373,4 +323,61 @@ function render() {
     }
 
 	requestAnimFrame(render);
+}
+
+/*
+	Here are defined all the functions we used to aid
+	us setting up the HTML part of the assignment
+*/
+
+function projectionDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "projSelect";
+	dropDown.options.add( new Option("Oblique",OBLIQUE));
+	dropDown.options.add( new Option("Axionometric",AXONOMETRIC));
+	dropDown.options.add( new Option("Perspective",PRESPECTIVE));
+	document.body.appendChild(dropDown);
+	return dropDown;
+}
+
+function objectDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "objectSelect";
+	dropDown.options.add( new Option("Sphere",SPHERE));
+	dropDown.options.add( new Option("Square",SQUARE));
+	dropDown.options.add( new Option("Cylinder",CYLINDER));
+	dropDown.options.add( new Option("Bunny",BUNNY));
+	document.body.appendChild(dropDown);
+	return dropDown;
+}
+
+function fillingDropDown() {
+    dropDown = document.createElement("select");
+    dropDown.id = "fillingSelect";
+	dropDown.options.add( new Option("Filled",FILLED));
+	dropDown.options.add( new Option("Wire Frame",WIRE));
+	document.body.appendChild(dropDown);
+	return dropDown;
+}
+
+function createButton(name, id, func) {
+  button = document.createElement("INPUT");
+  button.setAttribute("type", "button");
+  button.id = id;
+  button.value = name;
+  button.onclick = func;
+  document.body.appendChild(button);
+  return button;
+}
+
+function createSlide(id, min, max, def, step) {
+    var slide = document.createElement("INPUT");
+    slide.setAttribute("type", "range");
+    slide.id = id;
+    slide.defaultValue = def;
+    slide.step = step;
+    slide.max = max;
+    slide.min = min;
+    document.body.appendChild(slide);
+    return slide;
 }
