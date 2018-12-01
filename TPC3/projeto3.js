@@ -3,6 +3,8 @@ var gl;
 var program;
 
 var aspect;
+var rot = 0;
+var t1 = 1, t2, t3, t4;
 
 var mProjectionLoc, mModelViewLoc;
 
@@ -25,8 +27,8 @@ function multMatrix(m) {
 function multTranslation(t) {
     modelView = mult(modelView, translate(t));
 }
-function multScale(s) { 
-    modelView = mult(modelView, scalem(s)); 
+function multScale(s) {
+    modelView = mult(modelView, scalem(s));
 }
 function multRotationX(angle) {
     modelView = mult(modelView, rotateX(angle));
@@ -58,7 +60,7 @@ window.onload = function() {
     gl = WebGLUtils.setupWebGL(document.getElementById('gl-canvas'));
     fit_canvas_to_window();
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -69,22 +71,75 @@ window.onload = function() {
     mModelViewLoc = gl.getUniformLocation(program, "mModelView");
     mProjectionLoc = gl.getUniformLocation(program, "mProjection");
 
+    cylinderInit(gl);
+	cubeInit(gl);
     sphereInit(gl);
 
     render();
 }
 
+function cil() {
+	multScale([1,0.2,1]);
+	gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+	cylinderDrawFilled(gl, program);
+}
 
-function render() 
+function cuboLargo() {
+	multScale([0.3,1,0.3]);
+	gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+	cubeDrawFilled(gl, program);
+}
+
+function cuboFino() {
+    multScale([0.2,1,0.2]);
+    gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+    cubeDrawFilled(gl, program);
+}
+
+function cuboTopo() {
+    multScale([1,0.2,1]);
+    gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+    cubeDrawFilled(gl, program);
+}
+
+function drawObj() {
+
+}
+
+
+function render()
 {
     requestAnimationFrame(render);
-    
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    var projection = ortho(-VP_DISTANCE*aspect,VP_DISTANCE*aspect, -VP_DISTANCE, VP_DISTANCE,-3*VP_DISTANCE,3*VP_DISTANCE);
-    
+	modelView = lookAt([3,-1,2], [0,0,0], [0,1,0]);
+
+	var projection = ortho(-3,3,-1,3,10,-10);
+    //projection = mat4();
+
     gl.uniformMatrix4fv(mProjectionLoc, false, flatten(projection));
 
-    modelView = lookAt([1,1,1], [0,0,0], [0,1,0]);
 
+	//modelView = mat4();
+	multRotationY(rot);
+	pushMatrix();
+		cil();
+	popMatrix();
+	multTranslation([0,0.6,0]);
+	pushMatrix();
+		cuboLargo();
+	popMatrix();
+	multTranslation([0,1.0,0]);
+	pushMatrix();
+		cuboFino();
+	popMatrix();
+	multTranslation([0,0.6,0]);
+	pushMatrix();
+		cuboTopo();
+	popMatrix();
+	multTranslation(t4);
+	pushMatrix();
+		drawObj();
+	popMatrix();
 }
