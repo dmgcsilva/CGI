@@ -5,6 +5,7 @@ var program;
 var aspect;
 var rot = 0, rotSlider;
 var height = 1, heightSlider;
+var obj, objPicker;
 var t1 = 1, t2, t3, t4;
 
 var mProjectionLoc, mModelViewLoc;
@@ -61,8 +62,9 @@ window.onload = function() {
     canvas = document.getElementById('gl-canvas');
 
     gl = WebGLUtils.setupWebGL(document.getElementById('gl-canvas'));
-    fit_canvas_to_window();
-
+    //fit_canvas_to_window();
+    gl.viewport(0, 0,canvas.width, canvas.height);
+    aspect = 1;
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
@@ -91,10 +93,15 @@ function setupCallbacks() {
     heightSlider.onchange = function() {
         height = heightSlider.value;
     }
+    objPicker = document.getElementById("objPicker");
+    objPicker.onchange = function() {
+        obj = objPicker.value;
+    }
+
 }
 
 function cil() {
-	multScale([1,0.2,1]);
+	multScale([1.1,0.2,1.1]);
 	gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
 	cylinderDrawFilled(gl, program);
 }
@@ -112,13 +119,26 @@ function cuboFino() {
 }
 
 function cuboTopo() {
-    multScale([1,0.2,1]);
+    multScale([1.1,0.2,1.1]);
     gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
     cubeDrawFilled(gl, program);
 }
 
 function drawObj() {
-
+    gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+    switch (obj) {
+        case "cube":
+            cubeDrawFilled(gl,program);
+            break;
+        case "cylinder":
+            cylinderDrawFilled(gl,program);
+            break;
+        case "sphere":
+            sphereDrawFilled(gl,program);
+            break;
+        default:
+            cubeDrawFilled(gl,program);
+    }
 }
 
 
@@ -128,9 +148,9 @@ function render()
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	modelView = lookAt([3,1,2], [0,0,0], [0,1,0]);
+	modelView = lookAt([3,4,2], [0,2,0], [0,1,0]);
 
-	var mProjection = ortho(-3,3,-1,3,-10,10);
+	var mProjection = ortho(-2*aspect,2*aspect,-2,2,-10,10);
 
     gl.uniformMatrix4fv(mProjectionLoc, false, flatten(mProjection));
 
@@ -151,7 +171,7 @@ function render()
 	pushMatrix();
 		cuboTopo();
 	popMatrix();
-	multTranslation(t4);
+	multTranslation([0,0.6,0]);
 	pushMatrix();
 		drawObj();
 	popMatrix();
