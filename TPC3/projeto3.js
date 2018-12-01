@@ -3,7 +3,8 @@ var gl;
 var program;
 
 var aspect;
-var rot = 0;
+var rot = 0, rotSlider;
+var height = 1, heightSlider;
 var t1 = 1, t2, t3, t4;
 
 var mProjectionLoc, mModelViewLoc;
@@ -50,6 +51,8 @@ function fit_canvas_to_window()
 
 }
 
+
+
 window.onresize = function () {
     fit_canvas_to_window();
 }
@@ -75,7 +78,19 @@ window.onload = function() {
 	cubeInit(gl);
     sphereInit(gl);
 
+    setupCallbacks();
+
     render();
+}
+function setupCallbacks() {
+    rotSlider = document.getElementById("rotationSlider");
+    rotSlider.onchange = function() {
+        rot = rotSlider.value;
+    }
+    heightSlider = document.getElementById("heightSlider");
+    heightSlider.onchange = function() {
+        height = heightSlider.value;
+    }
 }
 
 function cil() {
@@ -113,15 +128,13 @@ function render()
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	modelView = lookAt([3,-1,2], [0,0,0], [0,1,0]);
+	modelView = lookAt([3,1,2], [0,0,0], [0,1,0]);
 
-	var projection = ortho(-3,3,-1,3,10,-10);
-    //projection = mat4();
+	var mProjection = ortho(-3,3,-1,3,-10,10);
 
-    gl.uniformMatrix4fv(mProjectionLoc, false, flatten(projection));
+    gl.uniformMatrix4fv(mProjectionLoc, false, flatten(mProjection));
 
 
-	//modelView = mat4();
 	multRotationY(rot);
 	pushMatrix();
 		cil();
@@ -130,7 +143,7 @@ function render()
 	pushMatrix();
 		cuboLargo();
 	popMatrix();
-	multTranslation([0,1.0,0]);
+	multTranslation([0,height,0]);
 	pushMatrix();
 		cuboFino();
 	popMatrix();
