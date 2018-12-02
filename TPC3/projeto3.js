@@ -8,10 +8,11 @@ var height = 1, heightSlider;
 var obj, objPicker;
 var t1 = 1, t2, t3, t4;
 
-var mProjectionLoc, mModelViewLoc;
+var mProjectionLoc, mModelViewLoc, vTexCoordsLoc;
 
 var matrixStack = [];
 var modelView;
+var texCoords_buffer = [];
 
 // Stack related operations
 function pushMatrix() {
@@ -75,15 +76,63 @@ window.onload = function() {
 
     mModelViewLoc = gl.getUniformLocation(program, "mModelView");
     mProjectionLoc = gl.getUniformLocation(program, "mProjection");
+    vTexCoordsLoc = gl.getAttribLocation(program, "vTexCoord");
 
-    cylinderInit(gl);
+
+    texCoords_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoords_buffer);
+    gl.enableVertexAttribArray(vTexCoordsLoc);
+    gl.vertexAttribPointer(vTexCoordsLoc, 2, gl.FLOAT, false, 0, 0);
+    setupTextCoords();
+
+
 	cubeInit(gl);
+    cylinderInit(gl);
     sphereInit(gl);
 
+    setupTexture();
     setupCallbacks();
 
     render();
 }
+
+function setupTextCoords() {
+    var texCoords_buffer = new Float32Array([
+        // front
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1,
+        // right side
+        1, 0,
+        2, 0,
+        2, 1,
+        1, 1,
+        // back
+        0, 0,
+        0, 1,
+        1, 1,
+        1, 0,
+        // left side
+        0, 0,
+        0, 1,
+        0, 1,
+        0, 0,
+        // top
+        0, 1,
+        1, 1,
+        1, 2,
+        0, 2,
+        // bottom
+        0, 0,
+        0, -1,
+        1, -1,
+        1, 0
+
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoords_buffer), gl.STATIC_DRAW);
+}
+
 function setupCallbacks() {
     rotSlider = document.getElementById("rotationSlider");
     rotSlider.onchange = function() {
@@ -98,6 +147,29 @@ function setupCallbacks() {
         obj = objPicker.value;
     }
 
+}
+
+function setupTexture() {
+    // Create a texture.
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Fill the texture with a 1x1 blue pixel.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+              new Uint8Array([0, 0, 255, 255]));
+
+    // Asynchronously load an image
+    var image = new Image();
+    image.src = "UV_Grid_Sm.jpg";
+    image.addEventListener('load', function() {
+        // Now that the image has loaded make copy it to the texture.
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    });
 }
 
 function cil() {
@@ -139,6 +211,10 @@ function drawObj() {
         default:
             cubeDrawFilled(gl,program);
     }
+    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
+    gl.enableVertexAttribArray(vTexCoordsLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoords_buffer);
+    gl.vertexAttribPointer(vTexCoordsLoc, 2, gl.FLOAT, false, 0, 0);
 }
 
 
@@ -153,6 +229,7 @@ function render()
 	var mProjection = ortho(-2*aspect,2*aspect,-2,2,-10,10);
 
     gl.uniformMatrix4fv(mProjectionLoc, false, flatten(mProjection));
+
 
 
 	multRotationY(rot);
