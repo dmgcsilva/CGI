@@ -14,9 +14,15 @@
 
         varying vec3 fNormal;
         varying vec2 fTexCoord;
+
+        vec2 getTexCoords(vec2 pos) {
+
+            return vec2(pos.x+0.5,abs(pos.y-0.5));
+        }
         void main() {
             gl_Position = mProjection * mModelView * vPosition;
             fTexCoord = vTexCoord;
+            fTexCoord = getTexCoords(vPosition.xy);
             fNormal = abs(vNormal);
         }
     </script>
