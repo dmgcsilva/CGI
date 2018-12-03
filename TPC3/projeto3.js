@@ -8,11 +8,10 @@ var height = 1, heightSlider;
 var obj, objPicker;
 var t1 = 1, t2, t3, t4;
 
-var mProjectionLoc, mModelViewLoc, vTexCoordsLoc;
+var mProjectionLoc, mModelViewLoc, colorFlagLoc;
 
 var matrixStack = [];
 var modelView;
-var texCoords_buffer = [];
 
 // Stack related operations
 function pushMatrix() {
@@ -76,17 +75,10 @@ window.onload = function() {
 
     mModelViewLoc = gl.getUniformLocation(program, "mModelView");
     mProjectionLoc = gl.getUniformLocation(program, "mProjection");
-    vTexCoordsLoc = gl.getAttribLocation(program, "vTexCoord");
+    colorFlagLoc = gl.getUniformLocation(program, "uColorFlag");
 
 
-    texCoords_buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoords_buffer);
-    gl.enableVertexAttribArray(vTexCoordsLoc);
-    gl.vertexAttribPointer(vTexCoordsLoc, 2, gl.FLOAT, false, 0, 0);
-    setupTextCoords();
-
-
-	cubeInit(gl);
+    cubeInit(gl);
     cylinderInit(gl);
     sphereInit(gl);
 
@@ -94,43 +86,6 @@ window.onload = function() {
     setupCallbacks();
 
     render();
-}
-
-function setupTextCoords() {
-    var texCoords_buffer = new Float32Array([
-        // front
-        0, 0,
-        1, 0,
-        1, 1,
-        0, 1,
-        // right side
-        1, 0,
-        2, 0,
-        2, 1,
-        1, 1,
-        // back
-        0, 0,
-        0, 1,
-        1, 1,
-        1, 0,
-        // left side
-        0, 0,
-        0, 1,
-        0, 1,
-        0, 0,
-        // top
-        0, 1,
-        1, 1,
-        1, 2,
-        0, 2,
-        // bottom
-        0, 0,
-        0, -1,
-        1, -1,
-        1, 0
-
-    ]);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoords_buffer), gl.STATIC_DRAW);
 }
 
 function setupCallbacks() {
@@ -198,6 +153,7 @@ function cuboTopo() {
 
 function drawObj() {
     gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
+    gl.uniform1f(colorFlagLoc, 1.0);
     switch (obj) {
         case "cube":
             cubeDrawFilled(gl,program);
@@ -211,10 +167,8 @@ function drawObj() {
         default:
             cubeDrawFilled(gl,program);
     }
+
     gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
-    gl.enableVertexAttribArray(vTexCoordsLoc);
-    gl.bindBuffer(gl.ARRAY_BUFFER, texCoords_buffer);
-    gl.vertexAttribPointer(vTexCoordsLoc, 2, gl.FLOAT, false, 0, 0);
 }
 
 
@@ -230,7 +184,7 @@ function render()
 
     gl.uniformMatrix4fv(mProjectionLoc, false, flatten(mProjection));
 
-
+    gl.uniform1f(colorFlagLoc, 0.0);
 
 	multRotationY(rot);
 	pushMatrix();
