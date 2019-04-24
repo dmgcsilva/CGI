@@ -3,15 +3,20 @@ var gl;
 var program;
 
 var aspect;
-var rot = 0, rotSlider;
-var height = 1, heightSlider;
-var obj, objPicker;
-var t1 = 1, t2, t3, t4;
-
-var mProjectionLoc, mModelViewLoc, colorFlagLoc;
+var rot = 0;
+var height = 0.5;
+var obj = "cube", objPicker;
+var vis = "filled", visPicker;
+var map = "ortogonal", mapPicker;
+var mProjectionLoc, mModelViewLoc, colorFlagLoc, mapFlagLoc;
 
 var matrixStack = [];
 var modelView;
+
+    /*
+    This project was made by Diogo Silva 50548 and João Silva 50651
+    For the CGI teachers team of DI FCT NOVA
+    */
 
 // Stack related operations
 function pushMatrix() {
@@ -45,7 +50,7 @@ function multRotationZ(angle) {
 function fit_canvas_to_window()
 {
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight - 25;
 
     aspect = canvas.width / canvas.height;
     gl.viewport(0, 0,canvas.width, canvas.height);
@@ -62,10 +67,8 @@ window.onload = function() {
     canvas = document.getElementById('gl-canvas');
 
     gl = WebGLUtils.setupWebGL(document.getElementById('gl-canvas'));
-    //fit_canvas_to_window();
-    gl.viewport(0, 0,canvas.width, canvas.height);
-    aspect = 1;
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    fit_canvas_to_window();
+    gl.clearColor(0.15, 0.15, 0.15, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -76,6 +79,7 @@ window.onload = function() {
     mModelViewLoc = gl.getUniformLocation(program, "mModelView");
     mProjectionLoc = gl.getUniformLocation(program, "mProjection");
     colorFlagLoc = gl.getUniformLocation(program, "uColorFlag");
+	mapFlagLoc = gl.getUniformLocation(program, "mapFlag");
 
 
     cubeInit(gl);
@@ -89,18 +93,41 @@ window.onload = function() {
 }
 
 function setupCallbacks() {
-    rotSlider = document.getElementById("rotationSlider");
-    rotSlider.onchange = function() {
-        rot = rotSlider.value;
-    }
-    heightSlider = document.getElementById("heightSlider");
-    heightSlider.onchange = function() {
-        height = heightSlider.value;
-    }
     objPicker = document.getElementById("objPicker");
     objPicker.onchange = function() {
         obj = objPicker.value;
     }
+
+	visPicker = document.getElementById("visPicker");
+    visPicker.onchange = function() {
+        vis = visPicker.value;
+    }
+
+	mapPicker = document.getElementById("mapPicker");
+    mapPicker.onchange = function() {
+        map = mapPicker.value;
+    }
+
+    window.addEventListener("keypress", function(e) {
+      switch(e.key) {
+        case 'a': //rotate left
+          rot += 1;
+          break;
+        case 'w': //lift pedestal
+            if(height < 1.0)
+                height += 0.05;
+          break;
+        case 'd': //rotate right
+          rot -= 1;
+          break;
+        case 's': //lower pedestal
+            if(height > 0.0)
+                height -= 0.05;
+          break;
+        default:
+          break;
+      }
+    });
 
 }
 
@@ -130,42 +157,111 @@ function setupTexture() {
 function cil() {
 	multScale([1.1,0.2,1.1]);
 	gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
-	cylinderDrawFilled(gl, program);
+	switch (vis) {
+                case "filled":
+                    cylinderDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cylinderDrawWireFrame(gl, program);
+                    break;
+                default:
+                }
 }
 
 function cuboLargo() {
 	multScale([0.3,1,0.3]);
 	gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
-	cubeDrawFilled(gl, program);
+	switch (vis) {
+                case "filled":
+                    cubeDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cubeDrawWireFrame(gl, program);
+                    break;
+                default:
+            }
 }
 
 function cuboFino() {
     multScale([0.2,1,0.2]);
     gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
-    cubeDrawFilled(gl, program);
+    switch (vis) {
+                case "filled":
+                    cubeDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cubeDrawWireFrame(gl, program);
+                    break;
+                default:
+            }
 }
 
 function cuboTopo() {
     multScale([1.1,0.2,1.1]);
     gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
-    cubeDrawFilled(gl, program);
+    switch (vis) {
+                case "filled":
+                    cubeDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cubeDrawWireFrame(gl, program);
+                    break;
+                default:
+            }
 }
 
 function drawObj() {
     gl.uniformMatrix4fv(mModelViewLoc, false, flatten(modelView));
     gl.uniform1f(colorFlagLoc, 1.0);
+
+	switch (map) {
+        case "ortogonal":
+			gl.uniform1f(mapFlagLoc, 0.0);
+            break;
+        case "cilindrico":
+            gl.uniform1f(mapFlagLoc, 1.5);
+            break;
+		case "esferico":
+			gl.uniform1f(mapFlagLoc, 3.0);
+			break;
+		default:
+    }
+
     switch (obj) {
         case "cube":
-            cubeDrawFilled(gl,program);
+		switch (vis) {
+                case "filled":
+                    cubeDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cubeDrawWireFrame(gl, program);
+                    break;
+                default:
+            }
             break;
         case "cylinder":
-            cylinderDrawFilled(gl,program);
+            switch (vis) {
+                case "filled":
+                    cylinderDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    cylinderDrawWireFrame(gl, program);
+                    break;
+                default:
+                }
             break;
         case "sphere":
-            sphereDrawFilled(gl,program);
+            switch (vis) {
+                case "filled":
+                    sphereDrawFilled(gl, program);
+                    break;
+                case "frame":
+                    sphereDrawWireFrame(gl, program);
+                    break;
+                default:
+                }
             break;
         default:
-            cubeDrawFilled(gl,program);
     }
 
     gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
@@ -180,11 +276,11 @@ function render()
 
 	modelView = lookAt([3,4,2], [0,2,0], [0,1,0]);
 
-	var mProjection = ortho(-2*aspect,2*aspect,-2,2,-10,10);
+	var mProjection = ortho(-3*aspect,3*aspect,-3,3,-10,10);
 
     gl.uniformMatrix4fv(mProjectionLoc, false, flatten(mProjection));
 
-    gl.uniform1f(colorFlagLoc, 0.0);
+	gl.uniform1f(colorFlagLoc, 0.0);
 
 	multRotationY(rot);
 	pushMatrix();
